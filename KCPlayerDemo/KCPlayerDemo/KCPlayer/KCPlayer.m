@@ -13,6 +13,7 @@
 
 @property (nonatomic,assign) NSInteger currentLoopCount;
 
+
 @end
 
 static NSString *const AVPlayerItemStatusKey = @"status";
@@ -214,9 +215,6 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     
     [self.player play];
     
-    
-//    self.player.rate = self.rate;
-    
     self.status = KCPlayerStatusPlay;
     !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
 }
@@ -248,6 +246,13 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         Float64 duration = CMTimeGetSeconds(weakSelf.player.currentItem.duration);
         
         !weakSelf.playerItemProgressDidChangeBlock ? : weakSelf.playerItemProgressDidChangeBlock(seconds, duration, seconds / duration);
+        
+        
+        if (weakSelf.currentItem.endTime && seconds >= weakSelf.currentItem.endTime) {
+            [weakSelf pause];
+            [weakSelf playerItemDidPlayToEndTimeNotification:nil];
+        }
+        
         
     }];
     
@@ -286,7 +291,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
             
         }else {
             
-            [self seekToTime:0 completionHandler:nil];
+            [self seekToTime:self.currentItem.startTime completionHandler:nil];
             [self play];
         }
         
@@ -304,12 +309,6 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
             
         }
         
-
-//        AVPlayerItem *item = [AVPlayerItem playerItemWithURL:url];
-//        
-//        if ([self.player canInsertItem:item afterItem:nil]) {
-//            [self.player insertItem:item afterItem:nil];
-//        }
         
     }
     
@@ -320,11 +319,9 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     
     if ([keyPath isEqualToString:AVPlayerItemStatusKey]) {
         
+        KCPlayerItem *item = [self KCPlayerItemOfAVPlayerItem:change[NSKeyValueChangeNewKey]];
         
-        AVPlayerItemStatus status = (AVPlayerItemStatus)[change[NSKeyValueChangeNewKey] integerValue];
-        
-        
-        !self.playerItemStatusDidChangedBlock ? : self.playerItemStatusDidChangedBlock(status);
+        !self.playerItemStatusDidChangedBlock ? : self.playerItemStatusDidChangedBlock(item, item.item.status);
         
        
         
@@ -357,12 +354,17 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         
         if (self.status == KCPlayerStatusPlay) {
             
+            [self seekToTime:newItem.startTime completionHandler:nil];
+            
             if (newItem.rate) {
+                
                 self.player.rate = newItem.rate;
+                
             }else {
                 
                 self.player.rate = self.rate;
             }
+            
         }
         
         if (oldItem && oldItem.item.status == AVPlayerItemStatusReadyToPlay) {
