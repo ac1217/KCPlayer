@@ -32,7 +32,7 @@ typedef enum : NSUInteger {
 
 + (instancetype)sharedPlayer;
 // 需要播放的资源
-@property (nonatomic,strong) NSArray <KCPlayerItem *>*currentItems;
+@property (nonatomic,strong) NSArray <KCPlayerItem *>*items;
 // 当前播放的资源
 @property (nonatomic,strong, readonly) KCPlayerItem *currentItem;
 // 当前播放的资源索引

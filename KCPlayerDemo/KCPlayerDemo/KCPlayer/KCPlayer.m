@@ -23,6 +23,11 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
 
 @implementation KCPlayer
 
+- (KCPlayerItem *)currentItem
+{
+    return [self KCPlayerItemOfAVPlayerItem:self.player.currentItem];
+}
+
 - (NSUInteger)currentItemIndex
 {
     return [self KCPlayerItemIndexOfAVPlayerItem:self.player.currentItem];
@@ -57,7 +62,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     if (!_playerView) {
         _playerView = [[KCPlayerView alloc] init];
         _playerView.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
-    
+        
     }
     return _playerView;
 }
@@ -81,9 +86,9 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         self.loopCount = 1;
         
         [self.player addObserver:self
-                                          forKeyPath:AVPlayerCurrentItemKey
-                                             options:NSKeyValueObservingOptionOld
-                              context:nil];
+                      forKeyPath:AVPlayerCurrentItemKey
+                         options:NSKeyValueObservingOptionOld
+                         context:nil];
         
         
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(applicationWillResignActiveNotification) name:UIApplicationWillResignActiveNotification object:nil];
@@ -111,18 +116,18 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-- (void)setCurrentItems:(NSArray<KCPlayerItem *> *)currentItems
+- (void)setItems:(NSArray<KCPlayerItem *> *)items
 {
     if (self.status == KCPlayerStatusPlaying) {
-    
+        
         [self pause];
     }
     
     self.status = KCPlayerStatusDefault;
     
-    _currentItems = currentItems;
+    _items = items;
     
-    if (currentItems.count > 1) {
+    if (items.count > 1) {
         
         self.player.actionAtItemEnd = AVPlayerActionAtItemEndAdvance;
         
@@ -133,7 +138,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     
     [self.player removeAllItems];
     
-    for (KCPlayerItem *item in currentItems) {
+    for (KCPlayerItem *item in items) {
         
         if ([self.player canInsertItem:item.item afterItem:nil]) {
             
@@ -144,7 +149,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     }
     [self.player pause];
     
-    if (self.autoPlay) {
+    if (self.autoPlay && items.count) {
         
         [self play];
     }
@@ -168,7 +173,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         [items addObject:[[KCPlayerItem alloc] initWithURL:url]];
     }
     
-    self.currentItems = items;
+    self.items = items;
     
 }
 
@@ -206,11 +211,11 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     if (!item || [item isKindOfClass:[NSNull class]]) {
         return;
     }
-        
+    
     [item addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
     [item addObserver:self forKeyPath:@"loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
     
-     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemDidPlayToEndTimeNotification:) name:AVPlayerItemDidPlayToEndTimeNotification object:item];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemDidPlayToEndTimeNotification:) name:AVPlayerItemDidPlayToEndTimeNotification object:item];
     
     __weak typeof(self) weakSelf = self;
     self.timeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 10) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
@@ -241,7 +246,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     if (!item || [item isKindOfClass:[NSNull class]]) {
         return;
     }
-        
+    
     [item removeObserver:self forKeyPath:AVPlayerItemStatusKey];
     [item removeObserver:self forKeyPath:AVPlayerItemLoadedTimeRangesKey];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:item];
@@ -257,7 +262,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     
     !self.playerItemDidPlayToEndTimeBlock ? : self.playerItemDidPlayToEndTimeBlock([self KCPlayerItemOfAVPlayerItem:self.player.currentItem]);
     
-    if (self.currentItems.count <= 1) {
+    if (self.items.count <= 1) {
         
         self.currentLoopCount++;
         
@@ -275,7 +280,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         
     }else {
         
-        if (self.currentItemIndex == self.currentItems.count - 1) { // 最后一个
+        if (self.currentItemIndex == self.items.count - 1) { // 最后一个
             self.currentLoopCount++;
             
             if (self.currentLoopCount >= self.loopCount) {
@@ -302,7 +307,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         
         !self.playerItemStatusDidChangedBlock ? : self.playerItemStatusDidChangedBlock(item, item.item.status);
         
-       
+        
         
         
     }else if ([keyPath isEqualToString:AVPlayerItemLoadedTimeRangesKey]) {
@@ -331,9 +336,9 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         
         !self.playerItemDidChangedBlock ? : self.playerItemDidChangedBlock(oldItem, newItem);
         
+        [self seekToTime:newItem.startTime completionHandler:nil];
+        
         if (self.status == KCPlayerStatusPlaying) {
-            
-            [self seekToTime:newItem.startTime completionHandler:nil];
             
             if (newItem.rate) {
                 
@@ -365,15 +370,15 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         return nil;
     }
     
-    return self.currentItems[index];
+    return self.items[index];
 }
 
 - (NSInteger)KCPlayerItemIndexOfAVPlayerItem:(AVPlayerItem *)item
 {
     NSInteger index = NSNotFound;
-    for (int i = 0; i < self.currentItems.count; i++) {
+    for (int i = 0; i < self.items.count; i++) {
         
-        if (self.currentItems[i].item == item) {
+        if (self.items[i].item == item) {
             return i;
             break;
         }
