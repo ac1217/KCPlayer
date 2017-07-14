@@ -14,15 +14,17 @@
 #import "KCPlayerItem.h"
 
 typedef enum : NSUInteger {
+    KCPlayerStatusDefault,
     KCPlayerStatusPause, // 暂停状态
-    KCPlayerStatusPlay // 播放状态
+    KCPlayerStatusPlaying, // 播放状态
+    KCPlayerStatusCompleted
 } KCPlayerStatus;
 
 typedef enum : NSUInteger {
-    KCPlayerPlayModeSingle, // 单曲播放
-    KCPlayerPlayModeSingleLoop, // 单曲循环
     KCPlayerPlayModeAll, // 顺序播放
     KCPlayerPlayModeAllLoop, // 循环播放
+    KCPlayerPlayModeSingle, // 单曲播放
+    KCPlayerPlayModeSingleLoop, // 单曲循环
     KCPlayerPlayModeRandom // 随机播放
 } KCPlayerPlayMode;
 
@@ -89,6 +91,7 @@ typedef enum : NSUInteger {
 // 是否支持后台播放
 @property (nonatomic,assign) BOOL playInBackground;
 
+// 播放模式
 @property (nonatomic,assign) KCPlayerPlayMode playMode;
 
 // 播放
@@ -98,6 +101,6 @@ typedef enum : NSUInteger {
 
 /*********** desperate ***********/
 @property (nonatomic,strong) NSURL *currentURL;
-@property (nonatomic,strong) NSArray *currentURLs;
+@property (nonatomic,strong) NSArray <NSURL *>*currentURLs;
 
 @end

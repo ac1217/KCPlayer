@@ -38,11 +38,6 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     return self.player.volume;
 }
 
-//- (void)setRate:(float)rate
-//{
-//    _rate = rate;
-//    self.player.rate = rate;
-//}
 
 - (float)duration
 {
@@ -118,10 +113,13 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
 
 - (void)setCurrentItems:(NSArray<KCPlayerItem *> *)currentItems
 {
-    if (self.status == KCPlayerStatusPlay) {
+    if (self.status == KCPlayerStatusPlaying) {
     
         [self pause];
     }
+    
+    self.status = KCPlayerStatusDefault;
+    
     _currentItems = currentItems;
     
     if (currentItems.count > 1) {
@@ -162,40 +160,15 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     
 }
 
-- (void)setCurrentURLs:(NSArray *)currentURLs
+- (void)setCurrentURLs:(NSArray <NSURL *>*)currentURLs
 {
     
-    if (self.status == KCPlayerStatusPlay) {
-        
-        [self pause];
-    }
-    
-    _currentURLs = currentURLs;
-    
-    if (currentURLs.count > 1) {
-        
-        self.player.actionAtItemEnd = AVPlayerActionAtItemEndAdvance;
-        
-    }else {
-        
-        self.player.actionAtItemEnd = AVPlayerActionAtItemEndPause;
-    }
-    
-    [self.player removeAllItems];
-    
+    NSMutableArray *items = @[].mutableCopy;
     for (NSURL *url in currentURLs) {
-        AVPlayerItem *item = [AVPlayerItem playerItemWithURL:url];
-        
-        if ([self.player canInsertItem:item afterItem:nil]) {
-            
-            [self.player insertItem:item afterItem:nil];
-        }
+        [items addObject:[[KCPlayerItem alloc] initWithURL:url]];
     }
     
-    if (self.autoPlay) {
-        
-        [self play];
-    }
+    self.currentItems = items;
     
 }
 
@@ -215,7 +188,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     
     [self.player play];
     
-    self.status = KCPlayerStatusPlay;
+    self.status = KCPlayerStatusPlaying;
     !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
 }
 
@@ -244,6 +217,10 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         
         Float64 seconds = CMTimeGetSeconds(time);
         Float64 duration = CMTimeGetSeconds(weakSelf.player.currentItem.duration);
+        
+        if (isnan(duration)) {
+            return;
+        }
         
         !weakSelf.playerItemProgressDidChangeBlock ? : weakSelf.playerItemProgressDidChangeBlock(seconds, duration, seconds / duration);
         
@@ -288,6 +265,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
             
             [self pause];
             self.currentLoopCount = 0;
+            self.status = KCPlayerStatusCompleted;
             
         }else {
             
@@ -304,6 +282,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
                 
                 [self pause];
                 self.currentLoopCount = 0;
+                self.status = KCPlayerStatusCompleted;
                 
             }
             
@@ -352,7 +331,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         
         !self.playerItemDidChangedBlock ? : self.playerItemDidChangedBlock(oldItem, newItem);
         
-        if (self.status == KCPlayerStatusPlay) {
+        if (self.status == KCPlayerStatusPlaying) {
             
             [self seekToTime:newItem.startTime completionHandler:nil];
             
