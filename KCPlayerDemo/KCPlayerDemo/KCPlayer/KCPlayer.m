@@ -23,6 +23,7 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
 
 @implementation KCPlayer
 
+
 - (KCPlayerItem *)currentItem
 {
     return [self KCPlayerItemOfAVPlayerItem:self.player.currentItem];
@@ -109,11 +110,13 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
 
 - (void)dealloc
 {
+//    NSLog(@"销毁");
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self pause];
     [self removeObserverWithItem:self.player.currentItem];
     [self.player removeObserver:self forKeyPath:AVPlayerCurrentItemKey];
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self.player removeAllItems];
+    self.player = nil;
 }
 
 - (void)setItems:(NSArray<KCPlayerItem *> *)items
@@ -140,13 +143,18 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     
     for (KCPlayerItem *item in items) {
         
-        if ([self.player canInsertItem:item.item afterItem:nil]) {
-            
-            [self.player insertItem:item.item afterItem:nil];
-            
-        }
+//        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        
+            if ([self.player canInsertItem:item.item afterItem:nil]) {
+                
+                [self.player insertItem:item.item afterItem:nil];
+                
+            }
+//        });
+        
         
     }
+    
     [self.player pause];
     
     if (self.autoPlay && items.count) {

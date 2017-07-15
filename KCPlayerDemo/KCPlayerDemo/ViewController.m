@@ -31,15 +31,24 @@
     self.player.playerView.backgroundColor = [UIColor orangeColor];
     self.player.playerView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.width * 9 / 16);
     
+    
     KCPlayerItem *item0 = [[KCPlayerItem alloc] initWithURL:[NSURL URLWithString:@"http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4"]];
     KCPlayerItem *item1 = [[KCPlayerItem alloc] initWithURL:[NSURL URLWithString:@"http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4"]];
     item1.rate = 2;
     
-    self.player.currentItems = @[item0, item1];
+    self.player.items = @[item0, item1];
+    
+}
+- (IBAction)back {
+    
+    
 }
 
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+    
+    
+    [self dismissViewControllerAnimated:YES completion:nil];
     
     
 }
