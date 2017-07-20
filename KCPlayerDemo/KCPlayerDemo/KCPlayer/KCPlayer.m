@@ -34,6 +34,13 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     return [self KCPlayerItemIndexOfAVPlayerItem:self.player.currentItem];
 }
 
+- (void)setRate:(float)rate
+{
+    _rate = rate;
+    
+    self.player.rate = rate;
+}
+
 - (void)setVolume:(float)volume
 {
     self.player.volume = volume;
@@ -162,13 +169,25 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
         [self play];
     }
     
+    if (items.count) {
+        
+        self.status = KCPlayerStatusBuffering;
+        !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+    }
+    
 }
 
 - (void)setCurrentURL:(NSURL *)currentURL
 {
     _currentURL = currentURL;
     
-    self.currentURLs = @[currentURL];
+    if (currentURL) {
+        
+        self.currentURLs = @[currentURL];
+    }else {
+        self.currentURLs = nil;
+    }
+    
     
     
 }
@@ -201,8 +220,13 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     
     [self.player play];
     
-    self.status = KCPlayerStatusPlaying;
-    !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+    if (self.player.currentItem.status == AVPlayerItemStatusReadyToPlay) {
+        
+        self.status = KCPlayerStatusPlaying;
+        !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+        
+    }
+    
 }
 
 - (void)pause
@@ -311,12 +335,15 @@ static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
     
     if ([keyPath isEqualToString:AVPlayerItemStatusKey]) {
         
-        KCPlayerItem *item = [self KCPlayerItemOfAVPlayerItem:change[NSKeyValueChangeNewKey]];
+        KCPlayerItem *item = self.currentItem;
         
         !self.playerItemStatusDidChangedBlock ? : self.playerItemStatusDidChangedBlock(item, item.item.status);
         
-        
-        
+        if (self.autoPlay && self.status == KCPlayerStatusBuffering && item.item.status == AVPlayerItemStatusReadyToPlay) {
+            
+            self.status = KCPlayerStatusPlaying;
+            !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+        }
         
     }else if ([keyPath isEqualToString:AVPlayerItemLoadedTimeRangesKey]) {
         

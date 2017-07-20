@@ -15,6 +15,7 @@
 
 typedef enum : NSUInteger {
     KCPlayerStatusDefault,
+    KCPlayerStatusBuffering,
     KCPlayerStatusPause, // 暂停状态
     KCPlayerStatusPlaying, // 播放状态
     KCPlayerStatusCompleted
