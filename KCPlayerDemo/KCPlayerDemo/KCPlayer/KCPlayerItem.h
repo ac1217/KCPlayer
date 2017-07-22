@@ -10,7 +10,7 @@
 
 @interface KCPlayerItem : NSObject
 @property (nonatomic,strong, readonly) NSURL *URL;
-@property (nonatomic,strong, readonly) AVPlayerItem *item;
+@property (nonatomic,strong) AVPlayerItem *item;
 @property (nonatomic,assign) float rate;
 @property (nonatomic,assign) NSTimeInterval startTime;
 @property (nonatomic,assign) NSTimeInterval endTime;

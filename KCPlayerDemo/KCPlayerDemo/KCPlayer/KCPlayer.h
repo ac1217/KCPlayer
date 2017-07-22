@@ -74,7 +74,7 @@ typedef enum : NSUInteger {
 // 跳到某个进度
 - (void)seekToProgress:(float)progress completionHandler:(void (^)(BOOL finished))completionHandler;
 
-// 播放速率
+// 播放速率,此属性只支持0.5-2倍速率，需要使用其他速率请设置item的rate
 @property (nonatomic,assign) float rate;
 
 // 播放音量
