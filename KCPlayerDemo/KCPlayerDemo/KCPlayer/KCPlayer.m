@@ -8,6 +8,7 @@
 
 #import "KCPlayer.h"
 
+//static NSString *const AVPlayerStatusKey = @"status";
 static NSString *const AVPlayerItemStatusKey = @"status";
 static NSString *const AVPlayerCurrentItemKey = @"currentItem";
 static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
@@ -104,6 +105,11 @@ static NSString *const KCPlayerItemRateKey = @"rate";
                          options:NSKeyValueObservingOptionOld
                          context:nil];
         
+//        [self.player addObserver:self
+//                      forKeyPath:AVPlayerStatusKey
+//                         options:NSKeyValueObservingOptionNew
+//                         context:nil];
+        
         
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(applicationWillResignActiveNotification) name:UIApplicationWillResignActiveNotification object:nil];
         
@@ -133,6 +139,9 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self pause];
     [self removeObserverWithItem:self.player.currentItem];
+    
+//    [self.player removeObserver:self forKeyPath:AVPlayerStatusKey];
+    
     [self.player removeObserver:self forKeyPath:AVPlayerCurrentItemKey];
     [self.player removeAllItems];
     self.player = nil;
@@ -141,6 +150,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
 
 - (void)setItems:(NSArray<KCPlayerItem *> *)items
 {
+    
     if (self.status == KCPlayerStatusPlaying) {
         
         [self pause];
@@ -149,8 +159,10 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     self.status = KCPlayerStatusDefault;
     
     for (KCPlayerItem *item in _items) {
+        
         [item removeObserver:self forKeyPath:KCPlayerItemItemKey];
         [item removeObserver:self forKeyPath:KCPlayerItemRateKey];
+        
     }
     
     _items = items;
@@ -168,13 +180,15 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     
     for (KCPlayerItem *item in items) {
         
+        [item addObserver:self forKeyPath:KCPlayerItemItemKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+        [item addObserver:self forKeyPath:KCPlayerItemRateKey options:NSKeyValueObservingOptionNew context:nil];
+        
         if ([self.player canInsertItem:item.item afterItem:nil]) {
             
             [self.player insertItem:item.item afterItem:nil];
             
         }
-        [item addObserver:self forKeyPath:KCPlayerItemItemKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
-        [item addObserver:self forKeyPath:KCPlayerItemRateKey options:NSKeyValueObservingOptionNew context:nil];
+        
         
     }
     
@@ -201,12 +215,18 @@ static NSString *const KCPlayerItemRateKey = @"rate";
 - (void)setCurrentURLs:(NSArray <NSURL *>*)currentURLs
 {
     
-    NSMutableArray *items = @[].mutableCopy;
-    for (NSURL *url in currentURLs) {
-        [items addObject:[[KCPlayerItem alloc] initWithURL:url]];
+    if (currentURLs) {
+        
+        NSMutableArray *items = @[].mutableCopy;
+        for (NSURL *url in currentURLs) {
+            [items addObject:[[KCPlayerItem alloc] initWithURL:url]];
+        }
+        
+        self.items = items;
+    }else {
+        self.items = nil;
     }
     
-    self.items = items;
     
 }
 
@@ -251,8 +271,8 @@ static NSString *const KCPlayerItemRateKey = @"rate";
         return;
     }
     
-    [item addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
-    [item addObserver:self forKeyPath:@"loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
+    [item addObserver:self forKeyPath:AVPlayerItemStatusKey options:NSKeyValueObservingOptionNew context:nil];
+    [item addObserver:self forKeyPath:AVPlayerItemLoadedTimeRangesKey options:NSKeyValueObservingOptionNew context:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemDidPlayToEndTimeNotification:) name:AVPlayerItemDidPlayToEndTimeNotification object:item];
     
@@ -285,6 +305,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     if (!item || [item isKindOfClass:[NSNull class]]) {
         return;
     }
+    
     
     [item removeObserver:self forKeyPath:AVPlayerItemStatusKey];
     [item removeObserver:self forKeyPath:AVPlayerItemLoadedTimeRangesKey];
@@ -342,12 +363,20 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     
     if ([keyPath isEqualToString:AVPlayerItemStatusKey]) {
         
+        
         KCPlayerItem *item = self.currentItem;
         
         !self.playerItemStatusDidChangedBlock ? : self.playerItemStatusDidChangedBlock(item, item.item.status);
         
-        if (self.autoPlay && self.status == KCPlayerStatusBuffering && item.item.status == AVPlayerItemStatusReadyToPlay) {
-            [self play];
+        if (item.item.status == AVPlayerItemStatusReadyToPlay && self.status == KCPlayerStatusBuffering) {
+            
+            self.status = KCPlayerStatusReady;
+            
+            !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+            
+            if (self.autoPlay) {
+                [self play];
+            }
         }
         
         
@@ -362,6 +391,9 @@ static NSString *const KCPlayerItemRateKey = @"rate";
         
         Float64 totalTime = CMTimeGetSeconds(self.player.currentItem.duration);
         
+        if (isnan(totalTime)) {
+            return;
+        }
         !self.playerItemLoadedTimeRangesDidChangedBlock ? : self.playerItemLoadedTimeRangesDidChangedBlock(totalTime, completedTime, completedTime / totalTime);
         
     }else if ([keyPath isEqualToString:AVPlayerCurrentItemKey]) {
