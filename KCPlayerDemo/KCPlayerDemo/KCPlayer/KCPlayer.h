@@ -19,12 +19,13 @@ typedef enum : NSUInteger {
     KCPlayerStatusReady,
     KCPlayerStatusPause, // 暂停状态
     KCPlayerStatusPlaying, // 播放状态
-    KCPlayerStatusCompleted
+    KCPlayerStatusCompleted,
+    KCPlayerStatusFailed
 } KCPlayerStatus;
 
 typedef enum : NSUInteger {
-    KCPlayerPlayModeAll, // 顺序播放
-    KCPlayerPlayModeAllLoop, // 循环播放
+    KCPlayerPlayModeDefault, // 顺序播放
+    KCPlayerPlayModeLoop, // 循环播放
     KCPlayerPlayModeSingle, // 单曲播放
     KCPlayerPlayModeSingleLoop, // 单曲循环
     KCPlayerPlayModeRandom // 随机播放
@@ -71,6 +72,8 @@ typedef enum : NSUInteger {
 
 // 跳到某个时间点
 - (void)seekToTime:(NSTimeInterval)time completionHandler:(void (^)(BOOL finished))completionHandler;
+
+- (void)seekToItemAtIndex:(NSUInteger)index;
 
 // 跳到某个进度
 - (void)seekToProgress:(float)progress completionHandler:(void (^)(BOOL finished))completionHandler;
