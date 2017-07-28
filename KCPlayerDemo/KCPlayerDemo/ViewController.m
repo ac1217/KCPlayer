@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import "KCPlayer.h"
 
+
 @interface ViewController ()
 @property (nonatomic,strong) KCPlayer *player;
 @end
@@ -27,6 +28,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+//    self.navigationController.jp_useCustomPopAnimationForCurrentViewController = YES;
+    self.title = @"视频";
     [self.view addSubview:self.player.playerView];
     self.player.playerView.backgroundColor = [UIColor orangeColor];
     self.player.playerView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.width * 9 / 16);
@@ -47,7 +50,7 @@
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
     
-    
+    [self play];
     [self dismissViewControllerAnimated:YES completion:nil];
     
     

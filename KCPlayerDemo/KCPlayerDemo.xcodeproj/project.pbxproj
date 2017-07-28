@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		071F9A2E1F2A334100E5F781 /* TestViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 071F9A2D1F2A334100E5F781 /* TestViewController.m */; };
 		886A83201F04976800C3053A /* KCPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 886A831D1F04976800C3053A /* KCPlayer.m */; };
 		886A83211F04976800C3053A /* KCPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 886A831F1F04976800C3053A /* KCPlayerView.m */; };
 		886A83241F0498F600C3053A /* KCPlayerItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 886A83231F0498F600C3053A /* KCPlayerItem.m */; };
@@ -38,6 +39,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		071F9A2C1F2A334100E5F781 /* TestViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestViewController.h; sourceTree = "<group>"; };
+		071F9A2D1F2A334100E5F781 /* TestViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestViewController.m; sourceTree = "<group>"; };
 		886A831C1F04976800C3053A /* KCPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KCPlayer.h; sourceTree = "<group>"; };
 		886A831D1F04976800C3053A /* KCPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KCPlayer.m; sourceTree = "<group>"; };
 		886A831E1F04976800C3053A /* KCPlayerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KCPlayerView.h; sourceTree = "<group>"; };
@@ -133,6 +136,8 @@
 				88DBD2191F033DCD001F4B08 /* LaunchScreen.storyboard */,
 				88DBD21C1F033DCD001F4B08 /* Info.plist */,
 				88DBD20B1F033DCD001F4B08 /* Supporting Files */,
+				071F9A2C1F2A334100E5F781 /* TestViewController.h */,
+				071F9A2D1F2A334100E5F781 /* TestViewController.m */,
 			);
 			path = KCPlayerDemo;
 			sourceTree = "<group>";
@@ -302,6 +307,7 @@
 				88DBD2101F033DCD001F4B08 /* AppDelegate.m in Sources */,
 				886A83241F0498F600C3053A /* KCPlayerItem.m in Sources */,
 				88DBD20D1F033DCD001F4B08 /* main.m in Sources */,
+				071F9A2E1F2A334100E5F781 /* TestViewController.m in Sources */,
 				886A83211F04976800C3053A /* KCPlayerView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
