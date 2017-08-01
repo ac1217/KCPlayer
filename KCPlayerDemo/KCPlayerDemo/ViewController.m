@@ -27,12 +27,12 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+    self.view.backgroundColor = [UIColor whiteColor];
 //    self.navigationController.jp_useCustomPopAnimationForCurrentViewController = YES;
     self.title = @"视频";
     [self.view addSubview:self.player.playerView];
     self.player.playerView.backgroundColor = [UIColor orangeColor];
-    self.player.playerView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.width * 9 / 16);
+    self.player.playerView.frame = CGRectMake(0, 64, self.view.frame.size.width, self.view.frame.size.width * 9 / 16);
     
     
     KCPlayerItem *item0 = [[KCPlayerItem alloc] initWithURL:[NSURL URLWithString:@"http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4"]];

@@ -270,26 +270,15 @@ static NSString *const KCPlayerItemRateKey = @"rate";
         return;
     }
     
-    NSInteger currentIndex = [self KCPlayerItemIndexOfAVPlayerItem:self.currentItem.item];
+    KCPlayerItem *item = self.items[index];
     
-    if (currentIndex == index) {
+    NSInteger idx = [self.player.items indexOfObject:item.item];
+    
+    for (int i = 0; i < idx; i++) {
         
-        [self seekToTime:self.currentItem.startTime completionHandler:nil];
-        [self play];
-        return;
-    }
-    
-    NSInteger count = 0;
-    if (index > currentIndex) {
-        count = index - currentIndex;
-    }else {
-        count = self.items.count + index - currentIndex;
-    }
-    
-    for (int i = 0; i < count; i++) {
         [self.player advanceToNextItem];
+        
     }
-    
     
 }
 
