@@ -25,7 +25,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
 
 @implementation KCPlayer
 
-
+#pragma mark -Getter
 - (KCPlayerItem *)currentItem
 {
     return [self KCPlayerItemOfAVPlayerItem:self.player.currentItem];
@@ -64,24 +64,25 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     return CMTimeGetSeconds(self.player.currentItem.duration);
 }
 
-- (AVQueuePlayer *)player
-{
-    if (!_player) {
-        _player = [[AVQueuePlayer alloc] init];
-    }
-    return _player;
-}
+//- (AVQueuePlayer *)player
+//{
+//    if (!_player) {
+//        _player = [[AVQueuePlayer alloc] init];
+//    }
+//    return _player;
+//}
 
 - (KCPlayerView *)playerView
 {
     if (!_playerView) {
         _playerView = [[KCPlayerView alloc] init];
-        _playerView.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
+//        _playerView.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
         
     }
     return _playerView;
 }
 
+#pragma mark -Instance
 + (instancetype)sharedPlayer
 {
     static id instance_;
@@ -92,177 +93,8 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     return instance_;
 }
 
-- (void)setPlayMode:(KCPlayerPlayMode)playMode
-{
-    _playMode = playMode;
-    
-    if (self.items.count > 1) {
-        
-        switch (playMode) {
-            case KCPlayerPlayModeSingleLoop:
-            case KCPlayerPlayModeSingle:
-                
-                self.player.actionAtItemEnd = AVPlayerActionAtItemEndPause;
-                break;
-                
-            default:
-                self.player.actionAtItemEnd = AVPlayerActionAtItemEndAdvance;
-                break;
-        }
-        
-        
-    }else {
-        
-        self.player.actionAtItemEnd = AVPlayerActionAtItemEndPause;
-    }
-    
-}
 
-- (instancetype)init
-{
-    if (self = [super init]) {
-        
-//        self.rate = 1;
-        
-        self.autoPlay = YES;
-        self.loopCount = 1;
-        
-        [self.player addObserver:self
-                      forKeyPath:AVPlayerCurrentItemKey
-                         options:NSKeyValueObservingOptionOld
-                         context:nil];
-        
-//        [self.player addObserver:self
-//                      forKeyPath:AVPlayerStatusKey
-//                         options:NSKeyValueObservingOptionNew
-//                         context:nil];
-        
-        
-        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(applicationWillResignActiveNotification) name:UIApplicationWillResignActiveNotification object:nil];
-        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(applicationDidBecomeActiveNotification) name:UIApplicationDidBecomeActiveNotification object:nil];
-        
-    }
-    return self;
-}
-
-- (void)applicationDidBecomeActiveNotification
-{
-    if (self.playInBackground) {
-        return;
-    }
-    
-    if (self.status == KCPlayerStatusPlaying) {
-        
-        [self.player play];
-    }
-}
-
-- (void)applicationWillResignActiveNotification
-{
-    
-    if (self.playInBackground) {
-        return;
-    }
-    
-    if (self.status == KCPlayerStatusPlaying) {
-        [self.player pause];
-    }
-}
-
-
-- (void)dealloc
-{
-//    NSLog(@"销毁");
-    
-    for (KCPlayerItem *item in _items) {
-        [item removeObserver:self forKeyPath:KCPlayerItemItemKey];
-        [item removeObserver:self forKeyPath:KCPlayerItemRateKey];
-    }
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [self pause];
-    [self removeObserverWithItem:self.player.currentItem];
-    
-    [self.player removeObserver:self forKeyPath:AVPlayerCurrentItemKey];
-    [self.player removeAllItems];
-    self.player = nil;
-    
-}
-
-- (void)setItems:(NSArray<KCPlayerItem *> *)items
-{
-    
-    if (self.status == KCPlayerStatusPlaying) {
-        
-        [self pause];
-    }
-    
-    self.status = KCPlayerStatusDefault;
-    !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
-    
-    for (KCPlayerItem *item in _items) {
-        
-        [item removeObserver:self forKeyPath:KCPlayerItemItemKey];
-        [item removeObserver:self forKeyPath:KCPlayerItemRateKey];
-        
-    }
-    
-    _items = items;
-    
-    self.playMode = self.playMode;
-    
-    [self.player removeAllItems];
-    
-    for (KCPlayerItem *item in items) {
-        
-        [item addObserver:self forKeyPath:KCPlayerItemItemKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
-        [item addObserver:self forKeyPath:KCPlayerItemRateKey options:NSKeyValueObservingOptionNew context:nil];
-        
-        if ([self.player canInsertItem:item.item afterItem:nil]) {
-            
-            [self.player insertItem:item.item afterItem:nil];
-            
-            
-        }
-        
-    }
-    
-    [self.player pause];
-}
-
-- (void)setCurrentURL:(NSURL *)currentURL
-{
-    _currentURL = currentURL;
-    
-    if (currentURL) {
-        
-        self.currentURLs = @[currentURL];
-    }else {
-        self.currentURLs = nil;
-    }
-    
-    
-    
-}
-
-- (void)setCurrentURLs:(NSArray <NSURL *>*)currentURLs
-{
-    
-    if (currentURLs) {
-        
-        NSMutableArray *items = @[].mutableCopy;
-        for (NSURL *url in currentURLs) {
-            [items addObject:[[KCPlayerItem alloc] initWithURL:url]];
-        }
-        
-        self.items = items;
-    }else {
-        self.items = nil;
-    }
-    
-}
-
-
+#pragma mark -Public Method
 - (void)seekToItemAtIndex:(NSUInteger)index completionHandler:(void (^)(BOOL finished))completionHandler
 {
     
@@ -363,17 +195,188 @@ static NSString *const KCPlayerItemRateKey = @"rate";
         return;
     }
     
-//    if (self.status != KCPlayerStatusPause) {
+    //    if (self.status != KCPlayerStatusPause) {
     
-        [self.player pause];
-        
-        self.status = KCPlayerStatusPause;
-        !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
-//    }
+    [self.player pause];
+    
+    self.status = KCPlayerStatusPause;
+    !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+    //    }
     
 }
 
-- (void)addObserverWithItem:(AVPlayerItem *)item
+#pragma mark -Setter
+- (void)setPlayMode:(KCPlayerPlayMode)playMode
+{
+    _playMode = playMode;
+    
+    if (self.items.count > 1) {
+        
+        switch (playMode) {
+            case KCPlayerPlayModeSingleLoop:
+            case KCPlayerPlayModeSingle:
+                
+                self.player.actionAtItemEnd = AVPlayerActionAtItemEndPause;
+                break;
+                
+            default:
+                self.player.actionAtItemEnd = AVPlayerActionAtItemEndAdvance;
+                break;
+        }
+        
+        
+    }else {
+        
+        self.player.actionAtItemEnd = AVPlayerActionAtItemEndPause;
+    }
+    
+}
+
+
+- (void)setItems:(NSArray<KCPlayerItem *> *)items
+{
+    
+    if (self.status == KCPlayerStatusPlaying) {
+        
+        [self pause];
+    }
+    
+    self.status = KCPlayerStatusDefault;
+    !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+    
+    [self removeKCPlayerItemObserver];
+    
+    _items = items;
+    
+    NSMutableArray *avPlayerItems = @[].mutableCopy;
+    for (KCPlayerItem *item in items) {
+        
+        [avPlayerItems addObject:item.item];
+        
+    }
+    
+    self.player = [AVQueuePlayer queuePlayerWithItems:avPlayerItems];
+    self.playerView.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
+    self.playMode = self.playMode;
+    [self.player pause];
+    
+    [self addKCPlayerItemObserver];
+    
+}
+
+- (void)setCurrentURL:(NSURL *)currentURL
+{
+    _currentURL = currentURL;
+    
+    if (currentURL) {
+        
+        self.currentURLs = @[currentURL];
+    }else {
+        self.currentURLs = nil;
+    }
+    
+    
+    
+}
+
+- (void)setCurrentURLs:(NSArray <NSURL *>*)currentURLs
+{
+    
+    if (currentURLs) {
+        
+        NSMutableArray *items = @[].mutableCopy;
+        for (NSURL *url in currentURLs) {
+            [items addObject:[[KCPlayerItem alloc] initWithURL:url]];
+        }
+        
+        self.items = items;
+    }else {
+        self.items = nil;
+    }
+    
+}
+
+
+#pragma mark -Life Cycle
+
+- (instancetype)init
+{
+    if (self = [super init]) {
+        
+        self.autoPlay = YES;
+        self.loopCount = 1;
+        
+//        [self.player addObserver:self
+//                      forKeyPath:AVPlayerCurrentItemKey
+//                         options:NSKeyValueObservingOptionOld
+//                         context:nil];
+        
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(applicationWillResignActiveNotification) name:UIApplicationWillResignActiveNotification object:nil];
+        
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(applicationDidBecomeActiveNotification) name:UIApplicationDidBecomeActiveNotification object:nil];
+        
+    }
+    return self;
+}
+
+
+- (void)dealloc
+{
+//    NSLog(@"销毁");
+    
+    [self removeKCPlayerItemObserver];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self pause];
+    
+    [self removePlayerObserver];
+    [self.player removeAllItems];
+    self.player = nil;
+    
+}
+
+#pragma mark -KVO
+- (void)addPlayerObserver
+{
+    
+    [self.player addObserver:self
+                  forKeyPath:AVPlayerCurrentItemKey
+                     options:NSKeyValueObservingOptionOld
+                     context:nil];
+    
+    [self addObserverWithAVPlayerItem:self.player.currentItem];
+}
+
+- (void)removePlayerObserver
+{
+    [self.player removeObserver:self forKeyPath:AVPlayerCurrentItemKey];
+    [self removeObserverWithAVPlayerItem:self.player.currentItem];
+}
+
+
+- (void)addKCPlayerItemObserver {
+    
+    for (KCPlayerItem *item in self.items) {
+        
+        [item addObserver:self forKeyPath:KCPlayerItemItemKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+        [item addObserver:self forKeyPath:KCPlayerItemRateKey options:NSKeyValueObservingOptionNew context:nil];
+        
+    }
+}
+
+- (void)removeKCPlayerItemObserver {
+    
+    
+    for (KCPlayerItem *item in self.items) {
+        
+        [item removeObserver:self forKeyPath:KCPlayerItemItemKey];
+        [item removeObserver:self forKeyPath:KCPlayerItemRateKey];
+        
+    }
+}
+
+
+- (void)addObserverWithAVPlayerItem:(AVPlayerItem *)item
 {
     
     if (!item || [item isKindOfClass:[NSNull class]]) {
@@ -408,7 +411,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     
 }
 
-- (void)removeObserverWithItem:(AVPlayerItem *)item
+- (void)removeObserverWithAVPlayerItem:(AVPlayerItem *)item
 {
     
     if (!item || [item isKindOfClass:[NSNull class]]) {
@@ -425,6 +428,162 @@ static NSString *const KCPlayerItemRateKey = @"rate";
         [self.player removeTimeObserver:self.timeObserver];
     }
 }
+
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
+{
+    
+    if ([keyPath isEqualToString:AVPlayerItemStatusKey]) {
+        
+        KCPlayerItem *item = self.currentItem;
+        
+        !self.playerItemStatusDidChangedBlock ? : self.playerItemStatusDidChangedBlock(item, item.item.status);
+        
+        AVPlayerItemStatus oldStatus = [change[NSKeyValueChangeOldKey] integerValue];
+        
+        if (item.item.status == AVPlayerItemStatusReadyToPlay && item.item.status != oldStatus && self.status != KCPlayerStatusPlaying) {
+            
+            self.status = KCPlayerStatusReady;
+            
+            !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+            
+            if (self.autoPlay) {
+                [self play];
+            }
+            
+        }else if (item.item.status == AVPlayerItemStatusFailed) {
+            
+            self.status = KCPlayerStatusFailed;
+            
+            !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+            
+        }
+        
+        
+    }else if ([keyPath isEqualToString:AVPlayerItemLoadedTimeRangesKey]) {
+        
+        CMTimeRange timeRange = self.player.currentItem.loadedTimeRanges.firstObject.CMTimeRangeValue;
+        
+        Float64 start = CMTimeGetSeconds(timeRange.start);
+        Float64 duration = CMTimeGetSeconds(timeRange.duration);
+        
+        Float64 completedTime = start + duration;
+        
+        Float64 totalTime = CMTimeGetSeconds(self.player.currentItem.duration);
+        
+        if (isnan(totalTime)) {
+            return;
+        }
+        !self.playerItemLoadedTimeRangesDidChangedBlock ? : self.playerItemLoadedTimeRangesDidChangedBlock(totalTime, completedTime, completedTime / totalTime);
+        
+    }else if ([keyPath isEqualToString:AVPlayerCurrentItemKey]) {
+        
+        AVPlayerItem *oldAVPlayerItem = change[NSKeyValueChangeOldKey];
+        
+        [self removeObserverWithAVPlayerItem:oldAVPlayerItem];
+        
+        [self addObserverWithAVPlayerItem:self.player.currentItem];
+        
+        KCPlayerItem *oldItem = [self KCPlayerItemOfAVPlayerItem:oldAVPlayerItem];
+        KCPlayerItem *newItem = [self KCPlayerItemOfAVPlayerItem:self.player.currentItem];
+        
+        !self.playerItemDidChangedBlock ? : self.playerItemDidChangedBlock(oldItem, newItem);
+        
+        [self seekToTime:newItem.startTime completionHandler:nil];
+        
+        if (newItem) {
+            
+            self.status = KCPlayerStatusBuffering;
+            !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
+        }
+        
+        if (newItem.rate <= 2) {
+            
+            self.rate = newItem.rate;
+        }
+        
+        if (oldItem) {
+            
+            [oldItem.item seekToTime:kCMTimeZero];
+            
+            if ([self.player canInsertItem:oldItem.item afterItem:nil]) {
+                [self.player insertItem:oldItem.item afterItem:nil];
+            }
+            
+            
+        }
+        
+        
+    }else if ([keyPath isEqualToString:KCPlayerItemItemKey]) {
+        
+        AVPlayerItem *newAvItem = change[NSKeyValueChangeNewKey];
+        AVPlayerItem *oldAvItem = change[NSKeyValueChangeOldKey];
+        
+        NSInteger index = [self.player.items indexOfObject:oldAvItem];
+        
+        if (index != NSNotFound) {
+            
+            index -= 1;
+            
+            if (index < 0) {
+                if ([self.player canInsertItem:newAvItem afterItem:oldAvItem]) {
+                    [self.player insertItem:newAvItem afterItem:oldAvItem];
+                }
+            }else {
+                
+                AVPlayerItem *item = self.player.items[index];
+                
+                if ([self.player canInsertItem:newAvItem afterItem:item]) {
+                    [self.player insertItem:newAvItem afterItem:item];
+                }
+            }
+            
+            [self.player removeItem:oldAvItem];
+            
+            
+        }
+        
+    }else if ([keyPath isEqualToString:KCPlayerItemRateKey]){
+        
+        CGFloat rate = [change[NSKeyValueChangeNewKey] floatValue];
+        
+        if (rate > 2 || object != self.currentItem) {
+            return;
+        }
+        
+        self.rate = rate;
+        
+    }
+    
+}
+
+#pragma mark -Notification
+
+
+- (void)applicationDidBecomeActiveNotification
+{
+    if (self.playInBackground) {
+        return;
+    }
+    
+    if (self.status == KCPlayerStatusPlaying) {
+        
+        [self.player play];
+    }
+}
+
+- (void)applicationWillResignActiveNotification
+{
+    
+    if (self.playInBackground) {
+        return;
+    }
+    
+    if (self.status == KCPlayerStatusPlaying) {
+        [self.player pause];
+    }
+}
+
 
 - (void)playerItemDidPlayToEndTimeNotification:(NSNotification *)note
 {
@@ -550,133 +709,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
-{
-    
-    if ([keyPath isEqualToString:AVPlayerItemStatusKey]) {
-        
-        KCPlayerItem *item = self.currentItem;
-        
-        !self.playerItemStatusDidChangedBlock ? : self.playerItemStatusDidChangedBlock(item, item.item.status);
-        
-        AVPlayerItemStatus oldStatus = [change[NSKeyValueChangeOldKey] integerValue];
-        
-        if (item.item.status == AVPlayerItemStatusReadyToPlay && item.item.status != oldStatus && self.status != KCPlayerStatusPlaying) {
-            
-            self.status = KCPlayerStatusReady;
-            
-            !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
-            
-            if (self.autoPlay) {
-                [self play];
-            }
-            
-        }else if (item.item.status == AVPlayerItemStatusFailed) {
-            
-            self.status = KCPlayerStatusFailed;
-            
-            !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
-            
-        }
-        
-        
-    }else if ([keyPath isEqualToString:AVPlayerItemLoadedTimeRangesKey]) {
-        
-        CMTimeRange timeRange = self.player.currentItem.loadedTimeRanges.firstObject.CMTimeRangeValue;
-        
-        Float64 start = CMTimeGetSeconds(timeRange.start);
-        Float64 duration = CMTimeGetSeconds(timeRange.duration);
-        
-        Float64 completedTime = start + duration;
-        
-        Float64 totalTime = CMTimeGetSeconds(self.player.currentItem.duration);
-        
-        if (isnan(totalTime)) {
-            return;
-        }
-        !self.playerItemLoadedTimeRangesDidChangedBlock ? : self.playerItemLoadedTimeRangesDidChangedBlock(totalTime, completedTime, completedTime / totalTime);
-        
-    }else if ([keyPath isEqualToString:AVPlayerCurrentItemKey]) {
-        
-        AVPlayerItem *oldAVPlayerItem = change[NSKeyValueChangeOldKey];
-        
-        [self removeObserverWithItem:oldAVPlayerItem];
-        
-        [self addObserverWithItem:self.player.currentItem];
-        
-        KCPlayerItem *oldItem = [self KCPlayerItemOfAVPlayerItem:oldAVPlayerItem];
-        KCPlayerItem *newItem = [self KCPlayerItemOfAVPlayerItem:self.player.currentItem];
-        
-        !self.playerItemDidChangedBlock ? : self.playerItemDidChangedBlock(oldItem, newItem);
-        
-        [self seekToTime:newItem.startTime completionHandler:nil];
-        
-        if (newItem) {
-            
-            self.status = KCPlayerStatusBuffering;
-            !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
-        }
-        
-        if (newItem.rate <= 2) {
-            
-            self.rate = newItem.rate;
-        }
-        
-        if (oldItem) {
-            
-            [oldItem.item seekToTime:kCMTimeZero];
-            
-            if ([self.player canInsertItem:oldItem.item afterItem:nil]) {
-                [self.player insertItem:oldItem.item afterItem:nil];
-            }
-            
-            
-        }
-        
-        
-    }else if ([keyPath isEqualToString:KCPlayerItemItemKey]) {
-        
-        AVPlayerItem *newAvItem = change[NSKeyValueChangeNewKey];
-        AVPlayerItem *oldAvItem = change[NSKeyValueChangeOldKey];
-        
-        NSInteger index = [self.player.items indexOfObject:oldAvItem];
-        
-        if (index != NSNotFound) {
-            
-            index -= 1;
-            
-            if (index < 0) {
-                if ([self.player canInsertItem:newAvItem afterItem:oldAvItem]) {
-                    [self.player insertItem:newAvItem afterItem:oldAvItem];
-                }
-            }else {
-                
-                AVPlayerItem *item = self.player.items[index];
-                
-                if ([self.player canInsertItem:newAvItem afterItem:item]) {
-                    [self.player insertItem:newAvItem afterItem:item];
-                }
-            }
-            
-            [self.player removeItem:oldAvItem];
-            
-            
-        }
-        
-    }else if ([keyPath isEqualToString:KCPlayerItemRateKey]){
-        
-        CGFloat rate = [change[NSKeyValueChangeNewKey] floatValue];
-        
-        if (rate > 2 || object != self.currentItem) {
-            return;
-        }
-        
-        self.rate = rate;
-        
-    }
-    
-}
-
+#pragma mark -Helper
 - (KCPlayerItem *)KCPlayerItemOfAVPlayerItem:(AVPlayerItem *)item
 {
     NSInteger index = [self KCPlayerItemIndexOfAVPlayerItem:item];
