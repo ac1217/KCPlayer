@@ -13,5 +13,6 @@
 
 @property (nonatomic,strong) AVPlayerLayer *playerLayer;
 
+@property (nonatomic,copy) void(^playerViewDidReadyForDisplayBlock)(BOOL isReadyForDisplay);
 
 @end

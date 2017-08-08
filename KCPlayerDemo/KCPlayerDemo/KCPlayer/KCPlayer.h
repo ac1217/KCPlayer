@@ -73,7 +73,7 @@ typedef enum : NSUInteger {
 // 跳到某个时间点
 - (void)seekToTime:(NSTimeInterval)time completionHandler:(void (^)(BOOL finished))completionHandler;
 
-- (void)seekToItemAtIndex:(NSUInteger)index;
+- (void)seekToItemAtIndex:(NSUInteger)index completionHandler:(void (^)(BOOL finished))completionHandler;;
 
 // 跳到某个进度
 - (void)seekToProgress:(float)progress completionHandler:(void (^)(BOOL finished))completionHandler;
