@@ -8,7 +8,6 @@
 
 #import "KCPlayer.h"
 
-//static NSString *const AVPlayerStatusKey = @"status";
 static NSString *const AVPlayerItemStatusKey = @"status";
 static NSString *const AVPlayerCurrentItemKey = @"currentItem";
 static NSString *const AVPlayerItemLoadedTimeRangesKey = @"loadedTimeRanges";
@@ -64,19 +63,10 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     return CMTimeGetSeconds(self.player.currentItem.duration);
 }
 
-//- (AVQueuePlayer *)player
-//{
-//    if (!_player) {
-//        _player = [[AVQueuePlayer alloc] init];
-//    }
-//    return _player;
-//}
-
 - (KCPlayerView *)playerView
 {
     if (!_playerView) {
         _playerView = [[KCPlayerView alloc] init];
-//        _playerView.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
         
     }
     return _playerView;
@@ -195,13 +185,10 @@ static NSString *const KCPlayerItemRateKey = @"rate";
         return;
     }
     
-    //    if (self.status != KCPlayerStatusPause) {
-    
     [self.player pause];
     
     self.status = KCPlayerStatusPause;
     !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
-    //    }
     
 }
 
@@ -244,7 +231,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     self.status = KCPlayerStatusDefault;
     !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
     
-    [self removeKCPlayerItemObserver];
+    [self removePlayerItemObserver];
     
     _items = items;
     
@@ -260,7 +247,8 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     self.playMode = self.playMode;
     [self.player pause];
     
-    [self addKCPlayerItemObserver];
+    [self addPlayerObserver];
+    [self addPlayerItemObserver];
     
 }
 
@@ -306,11 +294,6 @@ static NSString *const KCPlayerItemRateKey = @"rate";
         self.autoPlay = YES;
         self.loopCount = 1;
         
-//        [self.player addObserver:self
-//                      forKeyPath:AVPlayerCurrentItemKey
-//                         options:NSKeyValueObservingOptionOld
-//                         context:nil];
-        
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(applicationWillResignActiveNotification) name:UIApplicationWillResignActiveNotification object:nil];
         
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(applicationDidBecomeActiveNotification) name:UIApplicationDidBecomeActiveNotification object:nil];
@@ -322,13 +305,10 @@ static NSString *const KCPlayerItemRateKey = @"rate";
 
 - (void)dealloc
 {
-//    NSLog(@"销毁");
-    
-    [self removeKCPlayerItemObserver];
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self pause];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     
+    [self removePlayerItemObserver];
     [self removePlayerObserver];
     [self.player removeAllItems];
     self.player = nil;
@@ -354,7 +334,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
 }
 
 
-- (void)addKCPlayerItemObserver {
+- (void)addPlayerItemObserver {
     
     for (KCPlayerItem *item in self.items) {
         
@@ -364,7 +344,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     }
 }
 
-- (void)removeKCPlayerItemObserver {
+- (void)removePlayerItemObserver {
     
     
     for (KCPlayerItem *item in self.items) {
@@ -510,9 +490,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
                 [self.player insertItem:oldItem.item afterItem:nil];
             }
             
-            
         }
-        
         
     }else if ([keyPath isEqualToString:KCPlayerItemItemKey]) {
         

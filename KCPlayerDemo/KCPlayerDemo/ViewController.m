@@ -21,6 +21,12 @@
     if (!_player) {
         _player = [[KCPlayer alloc] init];
         _player.autoPlay = NO;
+        
+        _player.playerItemProgressDidChangeBlock = ^(float currentTime, float duration, float progress) {
+          
+            NSLog(@"%f", progress);
+            
+        };
     }
     return _player;
 }
