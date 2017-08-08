@@ -231,6 +231,7 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     self.status = KCPlayerStatusDefault;
     !self.playerStatusDidChangedBlock? : self.playerStatusDidChangedBlock(self.status);
     
+    [self removePlayerObserver];
     [self removePlayerItemObserver];
     
     _items = items;
@@ -284,7 +285,6 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     
 }
 
-
 #pragma mark -Life Cycle
 
 - (instancetype)init
@@ -308,8 +308,8 @@ static NSString *const KCPlayerItemRateKey = @"rate";
     [self pause];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
-    [self removePlayerItemObserver];
     [self removePlayerObserver];
+    [self removePlayerItemObserver];
     [self.player removeAllItems];
     self.player = nil;
     
@@ -324,13 +324,19 @@ static NSString *const KCPlayerItemRateKey = @"rate";
                      options:NSKeyValueObservingOptionOld
                      context:nil];
     
+    
+    
     [self addObserverWithAVPlayerItem:self.player.currentItem];
+    
 }
 
 - (void)removePlayerObserver
 {
     [self.player removeObserver:self forKeyPath:AVPlayerCurrentItemKey];
+    
     [self removeObserverWithAVPlayerItem:self.player.currentItem];
+    
+    
 }
 
 
