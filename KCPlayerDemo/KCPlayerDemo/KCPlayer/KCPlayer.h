@@ -73,6 +73,9 @@ typedef enum : NSUInteger {
 // 跳到某个时间点
 - (void)seekToTime:(NSTimeInterval)time completionHandler:(void (^)(BOOL finished))completionHandler;
 
+
+- (void)seekToItem:(KCPlayerItem *)item completionHandler:(void (^)(BOOL finished))completionHandler;
+
 - (void)seekToItemAtIndex:(NSUInteger)index completionHandler:(void (^)(BOOL finished))completionHandler;;
 
 // 跳到某个进度
@@ -105,7 +108,8 @@ typedef enum : NSUInteger {
 - (void)pause;
 
 /*********** desperate ***********/
-@property (nonatomic,strong) NSURL *currentURL;
-@property (nonatomic,strong) NSArray <NSURL *>*currentURLs;
+
+- (void)setURLs:(NSArray <NSURL *>*)URLs;
+- (void)setURL:(NSURL *)URL;
 
 @end
